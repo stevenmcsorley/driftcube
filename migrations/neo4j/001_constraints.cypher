@@ -1,0 +1,14 @@
+CREATE CONSTRAINT repo_id IF NOT EXISTS
+FOR (r:Repo) REQUIRE r.repoId IS UNIQUE;
+
+CREATE CONSTRAINT commit_sha IF NOT EXISTS
+FOR (c:Commit) REQUIRE (c.repoId, c.sha) IS UNIQUE;
+
+CREATE CONSTRAINT file_path IF NOT EXISTS
+FOR (f:File) REQUIRE (f.repoId, f.path) IS UNIQUE;
+
+CREATE CONSTRAINT symbol_id IF NOT EXISTS
+FOR (s:Symbol) REQUIRE (s.repoId, s.symbolId) IS UNIQUE;
+
+CREATE CONSTRAINT module_name IF NOT EXISTS
+FOR (m:Module) REQUIRE (m.repoId, m.name) IS UNIQUE;

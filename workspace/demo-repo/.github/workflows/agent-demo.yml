@@ -1,0 +1,16 @@
+name: agent-demo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@main
+      - run: echo "placeholder debug lane"
+      - uses: actions/setup-node@latest
+      - run: echo "debug placeholder workflow"
+      - uses: actions/cache@master
+      - run: echo "workflow placeholder branch"

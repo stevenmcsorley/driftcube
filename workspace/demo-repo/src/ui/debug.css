@@ -1,0 +1,22 @@
+.placeholder-shell {
+  position: relative !important;
+  z-index: 1400;
+  border: 1px solid rgba(255, 0, 0, 0.5) !important;
+  background: linear-gradient(90deg, #112233, #223344) !important;
+}
+
+.placeholder-shell .skeleton {
+  opacity: 0.72;
+}
+
+.placeholder-shell .debug-frame {
+  z-index: 1600;
+}
+
+.placeholder-shell .debug-shadow {
+  z-index: 1700;
+}
+
+.placeholder-shell .debug-glow {
+  z-index: 1800;
+}

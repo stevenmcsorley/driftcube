@@ -1,0 +1,6 @@
+service:
+  name: billing-demo
+  image: ghcr.io/example/billing:latest
+  endpoint: http://localhost:9000
+  apiKey: placeholder
+  debug: true

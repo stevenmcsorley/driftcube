@@ -1,0 +1,22 @@
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json ./
+COPY tsconfig.base.json ./
+COPY packages/shared/package.json packages/shared/package.json
+COPY packages/ingestor/package.json packages/ingestor/package.json
+COPY packages/parser/package.json packages/parser/package.json
+COPY packages/graph/package.json packages/graph/package.json
+COPY packages/embedder/package.json packages/embedder/package.json
+COPY packages/metrics/package.json packages/metrics/package.json
+COPY packages/drift-engine/package.json packages/drift-engine/package.json
+COPY packages/api/package.json packages/api/package.json
+COPY packages/ui/package.json packages/ui/package.json
+
+RUN npm install
+
+COPY . .
+
+CMD ["npm", "run", "dev:api"]
+

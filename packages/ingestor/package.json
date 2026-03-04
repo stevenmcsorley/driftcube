@@ -1,0 +1,15 @@
+{
+  "name": "@driftcube/ingestor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@driftcube/shared": "0.1.0",
+    "chokidar": "^4.0.3",
+    "pg": "^8.16.3"
+  }
+}

@@ -1,0 +1,6 @@
+<layout>
+  <!-- TODO placeholder shell -->
+  <mock-panel name="demo-placeholder">
+    <endpoint>http://localhost:7070/example</endpoint>
+  </mock-panel>
+</layout>

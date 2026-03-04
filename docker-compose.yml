@@ -1,0 +1,201 @@
+services:
+  nats:
+    image: nats:2.10
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "${DRIFTCUBE_NATS_HOST_PORT:-46222}:4222"
+      - "${DRIFTCUBE_NATS_MONITOR_HOST_PORT:-46282}:8222"
+
+  timescale:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-driftcube}
+    ports:
+      - "${DRIFTCUBE_PG_HOST_PORT:-45432}:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+
+  neo4j:
+    image: neo4j:5.22
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/password}
+      NEO4J_server_memory_pagecache_size: 512M
+      NEO4J_server_memory_heap_initial__size: 512M
+      NEO4J_server_memory_heap_max__size: 512M
+    ports:
+      - "${DRIFTCUBE_NEO4J_HTTP_HOST_PORT:-47474}:7474"
+      - "${DRIFTCUBE_NEO4J_BOLT_HOST_PORT:-47687}:7687"
+    volumes:
+      - neo4j_data:/data
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "${DRIFTCUBE_QDRANT_HTTP_HOST_PORT:-46333}:6333"
+      - "${DRIFTCUBE_QDRANT_GRPC_HOST_PORT:-46334}:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${DRIFTCUBE_REDIS_HOST_PORT:-46379}:6379"
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio123456}
+    ports:
+      - "${DRIFTCUBE_MINIO_API_HOST_PORT:-49000}:9000"
+      - "${DRIFTCUBE_MINIO_CONSOLE_HOST_PORT:-49001}:9001"
+    volumes:
+      - minio_data:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    command: npm run dev:api
+    environment:
+      NATS_URL: nats://nats:4222
+      PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@timescale:5432/${POSTGRES_DB:-driftcube}
+      QDRANT_URL: http://qdrant:6333
+      NEO4J_URL: bolt://neo4j:7687
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/password}
+      HOST_PATH_PREFIX: ${HOST_PATH_PREFIX:-/home/dev}
+      CONTAINER_PATH_PREFIX: ${CONTAINER_PATH_PREFIX:-/host-repos}
+      API_PORT: 8080
+      AUTH_DISABLED: "true"
+    ports:
+      - "${DRIFTCUBE_API_HOST_PORT:-48080}:8080"
+    volumes:
+      - .:/app
+      - ${HOST_PATH_PREFIX:-/home/dev}:${CONTAINER_PATH_PREFIX:-/host-repos}
+    depends_on:
+      - nats
+      - timescale
+      - qdrant
+      - neo4j
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    command: npm run dev:ui
+    environment:
+      API_INTERNAL_BASE: http://api:8080
+      NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:48080}
+      NEXT_PUBLIC_HOST_PATH_PREFIX: ${HOST_PATH_PREFIX:-/home/dev}
+      NEXT_PUBLIC_CONTAINER_PATH_PREFIX: ${CONTAINER_PATH_PREFIX:-/host-repos}
+    ports:
+      - "${DRIFTCUBE_UI_HOST_PORT:-43000}:3000"
+    volumes:
+      - .:/app
+    depends_on:
+      - api
+
+  ingestor:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    command: npm run dev:ingestor
+    environment:
+      NATS_URL: nats://nats:4222
+      PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@timescale:5432/${POSTGRES_DB:-driftcube}
+      WATCH_PATHS: /app/workspace/demo-repo
+    volumes:
+      - .:/app
+      - ${HOST_PATH_PREFIX:-/home/dev}:${CONTAINER_PATH_PREFIX:-/host-repos}
+    depends_on:
+      - nats
+      - timescale
+
+  parser:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    command: npm run dev:parser
+    environment:
+      NATS_URL: nats://nats:4222
+    volumes:
+      - .:/app
+      - ${HOST_PATH_PREFIX:-/home/dev}:${CONTAINER_PATH_PREFIX:-/host-repos}
+    depends_on:
+      - nats
+
+  graph:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    command: npm run dev:graph
+    environment:
+      NATS_URL: nats://nats:4222
+      NEO4J_URL: bolt://neo4j:7687
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/password}
+    volumes:
+      - .:/app
+    depends_on:
+      - nats
+      - neo4j
+
+  embedder:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    command: npm run dev:embedder
+    environment:
+      NATS_URL: nats://nats:4222
+      QDRANT_URL: http://qdrant:6333
+      EMBED_VECTOR_SIZE: ${EMBED_VECTOR_SIZE:-384}
+    volumes:
+      - .:/app
+    depends_on:
+      - nats
+      - qdrant
+
+  metrics:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    command: npm run dev:metrics
+    environment:
+      NATS_URL: nats://nats:4222
+      PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@timescale:5432/${POSTGRES_DB:-driftcube}
+      QDRANT_URL: http://qdrant:6333
+    volumes:
+      - .:/app
+    depends_on:
+      - nats
+      - timescale
+      - qdrant
+
+  drift-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    command: npm run dev:drift-engine
+    environment:
+      NATS_URL: nats://nats:4222
+      PG_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@timescale:5432/${POSTGRES_DB:-driftcube}
+      QDRANT_URL: http://qdrant:6333
+      NEO4J_URL: bolt://neo4j:7687
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/password}
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - .:/app
+    depends_on:
+      - nats
+      - timescale
+      - qdrant
+      - neo4j
+      - redis
+
+volumes:
+  timescale_data:
+  neo4j_data:
+  qdrant_data:
+  minio_data:

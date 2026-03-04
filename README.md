@@ -63,6 +63,26 @@ flowchart LR
 | `migrations` | SQL and Cypher bootstrapping |
 | `scripts` | Local bootstrap and demo utilities |
 
+## Platform Features
+
+### Available
+
+- **Code Entropy Index (CEI)**: Composite metric for architectural disorder across dependencies, duplication, complexity variance, and volatility.
+- **Architecture Pressure Mapping**: Predictive signal for structural stress, including coupling growth, boundary bending, and semantic duplication before visible drift.
+- **Boundary Pressure Detection**: Edge-level monitoring of module boundaries (for example `domain -> web`) to detect early architecture erosion.
+- **Alert Fingerprint Deduplication**: Hash-based suppression of repeated findings to keep alerts high signal.
+- **Refactor Suggestion Engine**: Ranked, evidence-backed refactor plans (dedupe, module extraction, dependency inversion) with predicted impact.
+- **AI Drift Detection**: Detection of AI-generated code risks including semantic clones, volatility, and style drift.
+- **Fleet Architecture Telemetry**: Central command view aggregating entropy, pressure, and drift across repositories.
+- **Live Codebase Observability Pipeline**: Continuous watcher -> parser -> graph -> embeddings -> metrics -> drift engine flow, rather than periodic scans.
+- **Graph + Semantic Hybrid Analysis**: Joint analysis using Neo4j dependency graphs plus Qdrant embedding similarity.
+
+### Planned
+
+- **Architecture Memory**: Store historical architecture signatures to learn what healthy looked like and detect deviations automatically.
+- **Architecture Similarity Search**: Find modules or repositories with similar structural and semantic patterns to reuse proven fixes.
+- **Impact Simulation**: Estimate how proposed refactors change entropy, pressure, and coupling before applying changes.
+
 ## Quick Start
 
 ### 1) Prerequisites
